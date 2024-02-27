@@ -14,7 +14,7 @@ public class CollocationExtractor {
     public static AmazonS3 S3;
     public static AmazonEC2 ec2;
     public static AmazonElasticMapReduce emr;
-    public static int numberOfInstances = 8;
+    public static int numberOfInstances = 1;
 
     public static void main(String[]args){
         if (args.length != 2) {
@@ -39,18 +39,28 @@ public class CollocationExtractor {
                 .withCredentials(credentialsProvider)
                 .withRegion("us-east-1")
                 .build();
-        System.out.println( "list cluster");
-        System.out.println( emr.listClusters());
+//        System.out.println( "list cluster");
+//        System.out.println( emr.listClusters());
 
         // Step 1
-        HadoopJarStepConfig Cw1w2NStep = new HadoopJarStepConfig()
-                .withJar("s3://collocation-extraction-bucket/jars/StepCounts.jar")
-                .withMainClass("Cw1w2NStep");
+        HadoopJarStepConfig StepOne = new HadoopJarStepConfig()
+                .withJar("s3://collocation-extraction-bucket/jars/StepOne.jar")
+                .withMainClass("StepOne");
 
-        StepConfig Cw1w2NStepConfig = new StepConfig()
-                .withName("Cw1w2NStep")
-                .withHadoopJarStep(Cw1w2NStep)
+        StepConfig StepOneConfig = new StepConfig()
+                .withName("StepOne")
+                .withHadoopJarStep(StepOne)
                 .withActionOnFailure("TERMINATE_JOB_FLOW");
+
+//        // Step 2
+//        HadoopJarStepConfig StepTwo = new HadoopJarStepConfig()
+//                .withJar("s3://collocation-extraction-bucket/jars/StepTwo.jar")
+//                .withMainClass("StepTwo");
+//
+//        StepConfig StepTwoConfig = new StepConfig()
+//                .withName("StepTwo")
+//                .withHadoopJarStep(StepTwo)
+//                .withActionOnFailure("TERMINATE_JOB_FLOW");
 
         //Job flow
         JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
@@ -64,10 +74,10 @@ public class CollocationExtractor {
 
         System.out.println("Set steps");
         RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
-                .withName("Map reduce project")
+                .withName("CollocationExtraction")
                 .withInstances(instances)
-                .withSteps(Cw1w2NStepConfig)
-                .withLogUri("s3://bucket163897429777/logs/")
+                .withSteps(StepOneConfig)
+                .withLogUri("s3://collocation-extraction-bucket/logs/")
                 .withServiceRole("EMR_DefaultRole")
                 .withJobFlowRole("EMR_EC2_DefaultRole")
                 .withReleaseLabel("emr-5.11.0");
