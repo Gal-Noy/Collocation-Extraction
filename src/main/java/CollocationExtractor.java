@@ -9,15 +9,22 @@ import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.elasticmapreduce.model.*;
 
-public class  App {
+public class CollocationExtractor {
     public static AWSCredentialsProvider credentialsProvider;
     public static AmazonS3 S3;
     public static AmazonEC2 ec2;
     public static AmazonElasticMapReduce emr;
-
-    public static int numberOfInstances = 1;
+    public static int numberOfInstances = 8;
 
     public static void main(String[]args){
+        if (args.length != 2) {
+            System.out.println("Usage: CollocationExtractor <minPmi> <relMinPmi>");
+            System.exit(1);
+        }
+
+        double minPmi = Double.parseDouble(args[0]);
+        double relMinPmi = Double.parseDouble(args[1]);
+
         credentialsProvider = new ProfileCredentialsProvider();
         System.out.println("[INFO] Connecting to aws");
         ec2 = AmazonEC2ClientBuilder.standard()
@@ -36,13 +43,13 @@ public class  App {
         System.out.println( emr.listClusters());
 
         // Step 1
-        HadoopJarStepConfig step1 = new HadoopJarStepConfig()
-                .withJar("s3://collocation-extraction-bucket/jars/WordCount.jar")
-                .withMainClass("Step1");
+        HadoopJarStepConfig Cw1w2NStep = new HadoopJarStepConfig()
+                .withJar("s3://collocation-extraction-bucket/jars/StepCounts.jar")
+                .withMainClass("Cw1w2NStep");
 
-        StepConfig stepConfig1 = new StepConfig()
-                .withName("Step1")
-                .withHadoopJarStep(step1)
+        StepConfig Cw1w2NStepConfig = new StepConfig()
+                .withName("Cw1w2NStep")
+                .withHadoopJarStep(Cw1w2NStep)
                 .withActionOnFailure("TERMINATE_JOB_FLOW");
 
         //Job flow
@@ -59,7 +66,7 @@ public class  App {
         RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
                 .withName("Map reduce project")
                 .withInstances(instances)
-                .withSteps(stepConfig1)
+                .withSteps(Cw1w2NStepConfig)
                 .withLogUri("s3://bucket163897429777/logs/")
                 .withServiceRole("EMR_DefaultRole")
                 .withJobFlowRole("EMR_EC2_DefaultRole")
