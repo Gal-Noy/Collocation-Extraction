@@ -53,7 +53,7 @@ public class StepOne {
             context.write(new StepOneKey(decade, w1, w2, new Text("W1W2")), cW1W2);
             context.write(new StepOneKey(decade, w1, STAR, new Text("W1")), cW1W2);
             context.write(new StepOneKey(decade, STAR, w2, new Text("W2")), cW1W2);
-            context.write(new StepOneKey(decade, STAR, STAR, new Text("DECADE")), cW1W2);
+            context.write(new StepOneKey(decade, STAR, STAR, new Text("N")), cW1W2);
         }
     }
 
@@ -75,7 +75,7 @@ public class StepOne {
     public static class ReducerClass extends Reducer<StepOneKey,LongWritable,StepOneKey, OutputValue> {
         private static long N = 0;
         private static long cW1 = 0;
-        private static Text currW1 = null;
+
         @Override
         // inputs:
         // <{decade, w1, w2, W1W2}, [c(w1,w2)]>
@@ -83,38 +83,33 @@ public class StepOne {
         // <{decade, *, w2, W2}, [c(w2)]>
         // <{decade, *, *, DECADE}, [N]>
         // outputs:
-        // <{decade, w1, w2, W1W2}, [0, 0, c(w2), N]> for extracting c(w2) in step 2
         // <{decade, w1, w2, W1W2}, [c(w1,w2), c(w1), 0, N]> for extracting c(w1w2) & c(w1) & N in step 2
+        // <{decade, w1, w2, W1W2}, [0, 0, c(w2), N]> for extracting c(w2) in step 2
         public void reduce(StepOneKey key, Iterable<LongWritable> counts, Context context) throws IOException,  InterruptedException {
             long totalCount = 0;
             for (LongWritable count : counts) {
                 totalCount += count.get();
             }
 
-            Text keyType = key.getType();
-
-            if (keyType.toString().equals("N")) {
-                N += totalCount;
-            }
-            else if (keyType.toString().equals("W1")) {
-                // if w1 is first or different from previous w1, reset cW1
-                if (currW1 == null || !currW1.equals(key.getW1())) {
-                    cW1 = 0;
-                    currW1 = key.getW1();
-                }
-                cW1 += totalCount;
-            }
-            else if (keyType.toString().equals("W2")) {
-                context.write(key, new OutputValue(new LongWritable(ZERO),
-                                                    new LongWritable(ZERO),
-                                                    new LongWritable(totalCount),
-                                                    new LongWritable(N)));
-            }
-            else { // W1W2
-                context.write(key, new OutputValue(new LongWritable(totalCount),
-                                                    new LongWritable(cW1),
-                                                    new LongWritable(ZERO),
-                                                    new LongWritable(N)));
+            switch (key.getType().toString()) {
+                case "N":
+                    N = totalCount;
+                    break;
+                case "W1":
+                    cW1 = totalCount;
+                    break;
+                case "W2":
+                    context.write(key, new OutputValue(new LongWritable(ZERO),
+                            new LongWritable(ZERO),
+                            new LongWritable(totalCount), // c(w2)
+                            new LongWritable(N)));
+                    break;
+                default:  // W1W2
+                    context.write(key, new OutputValue(new LongWritable(totalCount), // c(w1w2)
+                            new LongWritable(cW1),
+                            new LongWritable(ZERO),
+                            new LongWritable(N)));
+                    break;
             }
         }
     }
@@ -123,7 +118,7 @@ public class StepOne {
         // partition by decade
         @Override
         public int getPartition(StepOneKey key, LongWritable value, int numPartitions) {
-            return key.getDecade().hashCode() % numPartitions;
+            return (key.getDecade().get() % 100 / 10) % numPartitions;
         }
     }
 
