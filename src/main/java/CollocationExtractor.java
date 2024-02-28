@@ -39,8 +39,8 @@ public class CollocationExtractor {
                 .withCredentials(credentialsProvider)
                 .withRegion("us-east-1")
                 .build();
-//        System.out.println( "list cluster");
-//        System.out.println( emr.listClusters());
+        System.out.println( "list cluster");
+        System.out.println( emr.listClusters());
 
         // Step 1
         HadoopJarStepConfig StepOne = new HadoopJarStepConfig()
@@ -65,8 +65,8 @@ public class CollocationExtractor {
         //Job flow
         JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
                 .withInstanceCount(numberOfInstances)
-                .withMasterInstanceType(InstanceType.M4Large.toString())
-                .withSlaveInstanceType(InstanceType.M4Large.toString())
+                .withMasterInstanceType(InstanceType.M1Xlarge.toString())
+                .withSlaveInstanceType(InstanceType.M1Xlarge.toString())
                 .withHadoopVersion("2.9.2")
                 .withEc2KeyName("vockey")
                 .withKeepJobFlowAliveWhenNoSteps(false)

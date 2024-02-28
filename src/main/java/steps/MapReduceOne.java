@@ -12,7 +12,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
-public class StepOne {
+public class MapReduceOne {
 
     // TODO: add stop words
     public static class MapperClass extends Mapper<LongWritable, Text, Text, LongWritable> {
@@ -28,9 +28,7 @@ public class StepOne {
             Text decade = new Text(String.valueOf(year - year % 10));
             long count = Long.parseLong(lineParts[2]);
 
-            context.write(new Text(decade + ":1:" + w1), new LongWritable(count)); // <decade:1:w1, count>
-            context.write(new Text(decade + ":2:" + w2), new LongWritable(count)); // <decade:2:w2, count>
-            context.write(new Text(decade + ":3:" + bigram), new LongWritable(count)); // <decade:3:w1 w2, c(w1,w2)>
+            context.write(new Text(decade + ":3:" + bigram), new LongWritable(count)); // <decade::w1 w2, c(w1,w2)>
             context.write(decade, new LongWritable(count)); // <decade, c(w1,w2)>
         }
     }
@@ -82,7 +80,7 @@ public class StepOne {
         Configuration conf = new Configuration();
 
         Job job = Job.getInstance(conf, "Step One");
-        job.setJarByClass(StepOne.class);
+        job.setJarByClass(MapReduceOne.class);
         job.setMapperClass(MapperClass.class);
         job.setPartitionerClass(PartitionerClass.class);
         job.setCombinerClass(ReducerClass.class);
@@ -96,7 +94,7 @@ public class StepOne {
         job.setInputFormatClass(TextInputFormat.class);
         TextInputFormat.addInputPath(job, new Path("s3://collocation-extraction-bucket/inputs/bigrams-test.txt"));
 
-//        FileInputFormat.addInputPath(job, new Path("s3://collocation-extraction-bucket/inputs/bigrams-test.txt"));
+//        FileInputFormat.addInputPath(job, new Path("s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-all/2gram/data"));
         FileOutputFormat.setOutputPath(job, new Path("s3://collocation-extraction-bucket/outputs/cw1w2_N"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
