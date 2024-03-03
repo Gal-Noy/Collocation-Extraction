@@ -1,9 +1,9 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="Collocation-Extractor:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/Collocation_Extractor_jar</output-path>
+  <artifact type="jar" name="Collocation-Extractor:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/Collocation_Extractor_jar2</output-path>
     <root id="archive" name="Collocation-Extractor.jar">
       <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/src/main/java/steps/step1/META-INF/MANIFEST.MF" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/java/steps/step2/META-INF/MANIFEST.MF" />
       </element>
       <element id="module-output" name="Collocation-Extractor" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar" path-in-jar="/" />

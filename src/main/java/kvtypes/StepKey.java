@@ -65,6 +65,6 @@ public abstract class StepKey implements WritableComparable<StepKey>{
 
     @Override
     public String toString() {
-        return decade.toString() + "\t" + w1.toString() + "\t" + w2.toString() + "\t" + type.toString();
+        return decade.toString() + "::" + w1.toString() + "::" + w2.toString() + "::" + type.toString();
     }
 }

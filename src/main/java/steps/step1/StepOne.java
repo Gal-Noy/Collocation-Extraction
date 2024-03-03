@@ -1,6 +1,6 @@
 package steps.step1;
 
-import kvtypes.OutputValue;
+import kvtypes.StepValue;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -71,7 +71,7 @@ public class StepOne {
         }
     }
 
-    public static class ReducerClass extends Reducer<StepOneKey,LongWritable, StepOneKey, OutputValue> {
+    public static class ReducerClass extends Reducer<StepOneKey,LongWritable, StepOneKey, StepValue> {
         private static long N = 0;
         private static long cW1 = 0;
 
@@ -98,13 +98,13 @@ public class StepOne {
                     cW1 = totalCount;
                     break;
                 case "W2":
-                    context.write(key, new OutputValue(new LongWritable(ZERO),
+                    context.write(key, new StepValue(new LongWritable(ZERO),
                             new LongWritable(ZERO),
                             new LongWritable(totalCount), // c(w2)
                             new LongWritable(N)));
                     break;
                 default:  // W1W2
-                    context.write(key, new OutputValue(new LongWritable(totalCount), // c(w1w2)
+                    context.write(key, new StepValue(new LongWritable(totalCount), // c(w1w2)
                             new LongWritable(cW1),
                             new LongWritable(ZERO),
                             new LongWritable(N)));
@@ -138,7 +138,7 @@ public class StepOne {
         job.setMapOutputValueClass(LongWritable.class); // Counts for w1w2, w1, w2 or decade
 
         job.setOutputKeyClass(StepOneKey.class);
-        job.setOutputValueClass(OutputValue.class);
+        job.setOutputValueClass(StepValue.class);
 
         job.setInputFormatClass(TextInputFormat.class);
 

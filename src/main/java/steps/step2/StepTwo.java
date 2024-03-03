@@ -1,6 +1,6 @@
 package steps.step2;
 
-import kvtypes.OutputValue;
+import kvtypes.StepValue;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
@@ -12,27 +12,35 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import steps.step1.StepOneKey;
 
 import java.io.IOException;
 
 public class StepTwo {
 
-    public static class MapperClass extends Mapper<StepTwoKey, OutputValue, StepTwoKey, OutputValue> {
+    public static class MapperClass extends Mapper<LongWritable, Text, StepTwoKey, StepValue> {
 
         @Override
-        // input: <id, w1 w2 \t year \t c(w1,w2)>
-        // outputs:
-        // <{decade, w1, w2, W1W2}, {c(w1,w2), c(w1), 0, N}>
-        // <{decade, w1, w2, W2}, {0, 0, c(w2), N}>
-        public void map(StepTwoKey key, OutputValue value, Context context) throws IOException,  InterruptedException {
-            context.write(key, value);
+        // <id, decade::w1::w2::W1W2 \t c(w1,w2)::c(w1)::0::N> => <decade, w1, w2, W1W2>, <c(w1,w2), c(w1), 0, N>
+        // <id, decade::w1::w2::W2 \t 0::0::c(w2)::N> => <decade, w1, w2, W2>, <0, 0, c(w2), N>
+        public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+            String[] lineParts = value.toString().split("\t");
+
+            String[] keyParts = lineParts[0].split("::");
+            String decade = keyParts[0], w1 = keyParts[1], w2 = keyParts[2], type = keyParts[3];
+
+            String[] valueParts = lineParts[1].split("::");
+            long cW1W2 = Long.parseLong(valueParts[0]), cW1 = Long.parseLong(valueParts[1]), cW2 = Long.parseLong(valueParts[2]), N = Long.parseLong(valueParts[3]);
+
+            StepTwoKey newKey = new StepTwoKey(new IntWritable(Integer.parseInt(decade)), new Text(w1), new Text(w2), new Text(type));
+            StepValue newValue = new StepValue(new LongWritable(cW1W2), new LongWritable(cW1), new LongWritable(cW2), new LongWritable(N));
+
+            context.write(newKey, newValue);
         }
     }
 
-    public static class ReducerClass extends Reducer<StepTwoKey,OutputValue, StepTwoKey, DoubleWritable> {
+    public static class ReducerClass extends Reducer<StepTwoKey, StepValue, StepTwoKey, DoubleWritable> {
         private static long cW2 = 0;
         private static final Text STAR = new Text("*");
 
@@ -43,10 +51,10 @@ public class StepTwo {
         // outputs:
         // <{decade, w1, w2, W1W2}, npmi>
         // <{decade, *, *, PMI}, npmi>
-        public void reduce(StepTwoKey key, Iterable<OutputValue> counts, Context context) throws IOException,  InterruptedException {
-            OutputValue value = counts.iterator().next();
+        public void reduce(StepTwoKey key, Iterable<StepValue> counts, Context context) throws IOException, InterruptedException {
+            StepValue value = counts.iterator().next();
 
-            switch(key.getType().toString()) {
+            switch (key.getType().toString()) {
                 case "W2":
                     cW2 = value.getCW2().get();
                     break;
@@ -54,18 +62,23 @@ public class StepTwo {
                     long cW1W2 = value.getCW1W2().get();
                     long cW1 = value.getCW1().get();
                     long N = value.getCDecade().get();
-                    double npmi = Math.log(cW1W2) + Math.log(N) - Math.log(cW1) - Math.log(cW2);
+                    double pmi = Math.log(cW1W2) + Math.log(N) - Math.log(cW1) - Math.log(cW2);
+                    double npmi = -pmi / Math.log((double) cW1W2 / N);
+
+                    // For extracting minPmi
                     context.write(key, new DoubleWritable(npmi));
-                    context.write(new StepTwoKey(key.getDecade(), STAR, STAR, new Text("PMI")), new DoubleWritable(npmi));
+                    // For extracting relMinPmi
+                    context.write(new StepTwoKey(key.getDecade(), STAR, STAR, new Text("NPMI")), new DoubleWritable(npmi));
+
                     break;
             }
         }
     }
 
-    public static class PartitionerClass extends Partitioner<StepTwoKey, OutputValue> {
+    public static class PartitionerClass extends Partitioner<StepTwoKey, StepValue> {
         // Partition by decade
         @Override
-        public int getPartition(StepTwoKey key, OutputValue value, int numPartitions) {
+        public int getPartition(StepTwoKey key, StepValue value, int numPartitions) {
             return (key.getDecade().get() % 100 / 10) % numPartitions;
         }
     }
@@ -84,12 +97,12 @@ public class StepTwo {
         job.setReducerClass(ReducerClass.class);
 
         job.setMapOutputKeyClass(StepTwoKey.class);
-        job.setMapOutputValueClass(OutputValue.class);
+        job.setMapOutputValueClass(StepValue.class);
 
         job.setOutputKeyClass(StepTwoKey.class);
         job.setOutputValueClass(DoubleWritable.class);
 
-        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setInputFormatClass(TextInputFormat.class);
 
         FileInputFormat.addInputPath(job, new Path("s3://collocation-extraction-bucket/outputs/step-one"));
         FileOutputFormat.setOutputPath(job, new Path("s3://collocation-extraction-bucket/outputs/step-two"));

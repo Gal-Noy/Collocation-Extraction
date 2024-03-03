@@ -22,8 +22,8 @@ public class CollocationExtractor {
             System.exit(1);
         }
 
-        double minPmi = Double.parseDouble(args[0]);
-        double relMinPmi = Double.parseDouble(args[1]);
+        String minPmi = args[0];
+        String relMinPmi = args[1];
 
         initAWS();
 
@@ -39,10 +39,20 @@ public class CollocationExtractor {
         // Step 2
         HadoopJarStepConfig StepTwo = new HadoopJarStepConfig()
                 .withJar("s3://collocation-extraction-bucket/jars/StepTwo.jar")
+                .withArgs(minPmi, relMinPmi)
                 .withMainClass("StepTwo");
         StepConfig StepTwoConfig = new StepConfig()
                 .withName("StepTwo")
                 .withHadoopJarStep(StepTwo)
+                .withActionOnFailure("TERMINATE_JOB_FLOW");
+
+        // Step 3
+        HadoopJarStepConfig StepThree = new HadoopJarStepConfig()
+                .withJar("s3://collocation-extraction-bucket/jars/StepThree.jar")
+                .withMainClass("StepThree");
+        StepConfig StepThreeConfig = new StepConfig()
+                .withName("StepThree")
+                .withHadoopJarStep(StepThree)
                 .withActionOnFailure("TERMINATE_JOB_FLOW");
 
         //Job flow
@@ -59,7 +69,7 @@ public class CollocationExtractor {
         RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
                 .withName("CollocationExtraction")
                 .withInstances(instances)
-                .withSteps(StepOneConfig, StepTwoConfig)
+                .withSteps(StepOneConfig, StepTwoConfig, StepThreeConfig)
                 .withLogUri("s3://collocation-extraction-bucket/logs/")
                 .withServiceRole("EMR_DefaultRole")
                 .withJobFlowRole("EMR_EC2_DefaultRole")
