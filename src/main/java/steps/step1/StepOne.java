@@ -1,6 +1,7 @@
 package steps.step1;
 
-import kvtypes.StepValue;
+import kvutils.StepValue;
+import kvutils.StopWords;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -20,11 +21,15 @@ public class StepOne {
     private static final Text STAR = new Text("*");
     private static final long ZERO = 0;
 
-    // TODO: add stop words
     public static class MapperClass extends Mapper<LongWritable, Text, StepOneKey, LongWritable> {
+        private static StopWords stopWords;
+        public void setup(Context context) {
+            String stopWordsPath = context.getConfiguration().get("stopWordsPath");
+            stopWords = new StopWords(stopWordsPath);
+        }
 
         @Override
-        // input: <id, w1 w2 \t year \t c(w1,w2)>
+        // input: <id, "w1 w2 \t year \t c(w1,w2)">
         // outputs:
         // <{decade, w1, w2, W1W2}, c(w1,w2)>
         // <{decade, w1, *, W1}, c(w1,w2)>
@@ -36,6 +41,10 @@ public class StepOne {
             String[] bigram = lineParts[0].split(" ");
             Text w1 = new Text(bigram[0].toLowerCase());
             Text w2 = new Text(bigram[1].toLowerCase());
+
+            if (stopWords.containsWord(w1.toString()) || stopWords.containsWord(w2.toString())) {
+                return;
+            }
 
             IntWritable decade = new IntWritable();
             LongWritable cW1W2 = new LongWritable();
@@ -123,8 +132,13 @@ public class StepOne {
 
     public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 1 started!");
+        if (args.length != 2) {
+            System.err.println("Usage: StepOne <stopWordsPath");
+            System.exit(-1);
+        }
 
         Configuration conf = new Configuration();
+        conf.set("stopWordsPath", args[1]);
 
         Job job = Job.getInstance(conf, "Step One");
         job.setJarByClass(StepOne.class);

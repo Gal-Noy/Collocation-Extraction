@@ -1,6 +1,6 @@
 package steps.step2;
 
-import kvtypes.StepValue;
+import kvutils.StepValue;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
@@ -22,15 +22,15 @@ public class StepTwo {
     public static class MapperClass extends Mapper<LongWritable, Text, StepTwoKey, StepValue> {
 
         @Override
-        // <id, decade::w1::w2::W1W2 \t c(w1,w2)::c(w1)::0::N> => <decade, w1, w2, W1W2>, <c(w1,w2), c(w1), 0, N>
-        // <id, decade::w1::w2::W2 \t 0::0::c(w2)::N> => <decade, w1, w2, W2>, <0, 0, c(w2), N>
+        // <id, "decade w1 w2 W1W2 \t c(w1,w2) c(w1) 0 N"> => <decade, w1, w2, W1W2>, <c(w1,w2), c(w1), 0, N>
+        // <id, "decade w1 w2 W2 \t 0 0 c(w2) N"> => <decade, w1, w2, W2>, <0, 0, c(w2), N>
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String[] lineParts = value.toString().split("\t");
 
-            String[] keyParts = lineParts[0].split("::");
+            String[] keyParts = lineParts[0].split(" ");
             String decade = keyParts[0], w1 = keyParts[1], w2 = keyParts[2], type = keyParts[3];
 
-            String[] valueParts = lineParts[1].split("::");
+            String[] valueParts = lineParts[1].split(" ");
             long cW1W2 = Long.parseLong(valueParts[0]), cW1 = Long.parseLong(valueParts[1]), cW2 = Long.parseLong(valueParts[2]), N = Long.parseLong(valueParts[3]);
 
             StepTwoKey newKey = new StepTwoKey(new IntWritable(Integer.parseInt(decade)), new Text(w1), new Text(w2), new Text(type));

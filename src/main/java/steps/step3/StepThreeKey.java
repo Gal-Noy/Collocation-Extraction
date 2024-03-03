@@ -1,6 +1,6 @@
 package steps.step3;
 
-import kvtypes.StepKey;
+import kvutils.StepKey;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;

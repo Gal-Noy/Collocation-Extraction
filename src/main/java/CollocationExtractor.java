@@ -24,12 +24,14 @@ public class CollocationExtractor {
 
         String minPmi = args[0];
         String relMinPmi = args[1];
+        String stopWordsPath = "s3://collocation-extraction-bucket/stop-words/eng-stopwords.txt";
 
         initAWS();
 
         // Step 1
         HadoopJarStepConfig StepOne = new HadoopJarStepConfig()
                 .withJar("s3://collocation-extraction-bucket/jars/StepOne.jar")
+                .withArgs(stopWordsPath)
                 .withMainClass("StepOne");
         StepConfig StepOneConfig = new StepConfig()
                 .withName("StepOne")
@@ -39,7 +41,6 @@ public class CollocationExtractor {
         // Step 2
         HadoopJarStepConfig StepTwo = new HadoopJarStepConfig()
                 .withJar("s3://collocation-extraction-bucket/jars/StepTwo.jar")
-                .withArgs(minPmi, relMinPmi)
                 .withMainClass("StepTwo");
         StepConfig StepTwoConfig = new StepConfig()
                 .withName("StepTwo")
@@ -49,6 +50,7 @@ public class CollocationExtractor {
         // Step 3
         HadoopJarStepConfig StepThree = new HadoopJarStepConfig()
                 .withJar("s3://collocation-extraction-bucket/jars/StepThree.jar")
+                .withArgs(minPmi, relMinPmi)
                 .withMainClass("StepThree");
         StepConfig StepThreeConfig = new StepConfig()
                 .withName("StepThree")

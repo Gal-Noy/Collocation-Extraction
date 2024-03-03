@@ -1,6 +1,6 @@
 package steps.step2;
 
-import kvtypes.StepKey;
+import kvutils.StepKey;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;

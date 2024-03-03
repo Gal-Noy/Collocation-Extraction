@@ -1,4 +1,4 @@
-package kvtypes;
+package kvutils;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -65,6 +65,6 @@ public abstract class StepKey implements WritableComparable<StepKey>{
 
     @Override
     public String toString() {
-        return decade.toString() + "::" + w1.toString() + "::" + w2.toString() + "::" + type.toString();
+        return decade.toString() + " " + w1.toString() + " " + w2.toString() + " " + type.toString();
     }
 }

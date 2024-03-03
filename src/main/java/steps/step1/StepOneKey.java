@@ -1,13 +1,9 @@
 package steps.step1;
 
-import kvtypes.StepKey;
+import kvutils.StepKey;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 
 public class StepOneKey extends StepKey implements WritableComparable<StepKey>{
 

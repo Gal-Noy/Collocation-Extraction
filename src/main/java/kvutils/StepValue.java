@@ -1,4 +1,4 @@
-package kvtypes;
+package kvutils;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
@@ -61,6 +61,6 @@ public class StepValue implements Writable {
 
     @Override
     public String toString() {
-        return cW1W2.toString() + "::" + cW1.toString() + "::" + cW2.toString() + "::" + cDecade.toString();
+        return cW1W2.toString() + " " + cW1.toString() + " " + cW2.toString() + " " + cDecade.toString();
     }
 }

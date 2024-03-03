@@ -15,18 +15,19 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 
 public class StepThree {
     public static class MapperClass extends Mapper<LongWritable, Text, StepThreeKey, DoubleWritable> {
 
         @Override
-        // decade::w1::w2::W1W2 \t npmi => <{decade, w1, w2, W1W2, npmi}, npmi>
-        // decade::*::*::NPMI \t npmi => <{decade, 0, 0, NPMI, npmi}, npmi>
+        // <id, "decade w1 w2 W1W2 \t npmi"> => <{decade, w1, w2, W1W2, npmi}, npmi>
+        // <id, "decade * * NPMI \t npmi"> => <{decade, 0, 0, NPMI, npmi}, npmi>
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String[] lineParts = value.toString().split("\t");
 
-            String[] keyParts = lineParts[0].split("::");
+            String[] keyParts = lineParts[0].split(" ");
             String decade = keyParts[0], w1 = keyParts[1], w2 = keyParts[2], type = keyParts[3];
 
             double npmi = Double.parseDouble(lineParts[1]);
@@ -47,19 +48,24 @@ public class StepThree {
         // <{decade, w1, w2, W1W2, npmi}, "NPMI: npmi \t relMinPMI: rNpmi"> if npmi >= minPmi or rNpmi >= relMinPmi
         // printed as: "w1 w2 decade \t NPMI: npmi \t relMinPMI: rNpmi"
         public void reduce(StepThreeKey key, Iterable<DoubleWritable> counts, Context context) throws IOException, InterruptedException {
-            if (key.getType().toString().equals("NPMI")) {
-                for (DoubleWritable count : counts) {
-                    decadeNPMIs += count.get();
-                }
-            } else { // W1W2
-                double npmi = counts.iterator().next().get();
-                double rNpmi = npmi / decadeNPMIs;
-                final double minPmi = Double.parseDouble(context.getConfiguration().get("minPmi"));
-                final double relMinPmi = Double.parseDouble(context.getConfiguration().get("relMinPmi"));
+            try {
+                if (key.getType().toString().equals("NPMI")) {
+                    for (DoubleWritable count : counts) {
+                        decadeNPMIs += count.get();
+                    }
+                } else { // W1W2
+                    double npmi = counts.iterator().next().get();
+                    double rNpmi = npmi / decadeNPMIs;
+                    final double minPmi = Double.parseDouble(context.getConfiguration().get("minPmi"));
+                    final double relMinPmi = Double.parseDouble(context.getConfiguration().get("relMinPmi"));
 
-                if (npmi >= minPmi || rNpmi >= relMinPmi) {
-                    context.write(key, new Text("NPMI: " + npmi + "\trelMinPMI: " + rNpmi));
+                    if (npmi >= minPmi || rNpmi >= relMinPmi) {
+                        context.write(key, new Text(String.format("NPMI: %.5f", npmi)));
+                    }
                 }
+            }
+            catch (Exception e) {
+                System.out.println("[ERROR] " + e.getMessage());
             }
         }
     }
@@ -75,8 +81,14 @@ public class StepThree {
 
     public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 3 started!");
+        if (args.length != 3) {
+            System.out.println("Usage: StepThree <minPmi> <relMinPmi>");
+            System.exit(1);
+        }
 
         Configuration conf = new Configuration();
+        conf.set("minPmi", args[1]);
+        conf.set("relMinPmi", args[2]);
 
         Job job = Job.getInstance(conf, "Step Three");
         job.setJarByClass(StepThree.class);
