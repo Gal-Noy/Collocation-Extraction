@@ -27,6 +27,22 @@ public class OutputValue implements WritableComparable<OutputValue> {
         this.cDecade = cDecade;
     }
 
+    public LongWritable getCW1W2() {
+        return cW1W2;
+    }
+
+    public LongWritable getCW1() {
+        return cW1;
+    }
+
+    public LongWritable getCW2() {
+        return cW2;
+    }
+
+    public LongWritable getCDecade() {
+        return cDecade;
+    }
+
     @Override
     public int compareTo(OutputValue o) {
         return 0;

@@ -1,7 +1,6 @@
-package steps;
+package steps.step1;
 
 import kvtypes.OutputValue;
-import kvtypes.StepOneKey;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -57,7 +56,7 @@ public class StepOne {
         }
     }
 
-    public static class CombinerClass extends Reducer<StepOneKey,LongWritable,StepOneKey,LongWritable> {
+    public static class CombinerClass extends Reducer<StepOneKey,LongWritable, StepOneKey,LongWritable> {
         @Override
         // <{decade, w1, w2, W1W2}, [c(w1,w2)]> => <{decade, w1, w2, W1W2}, [c(w1,w2)]>
         // <{decade, w1, *, W1}, [c1...cn]> => <{decade, w1, *, W1}, [c(w1)]>
@@ -72,7 +71,7 @@ public class StepOne {
         }
     }
 
-    public static class ReducerClass extends Reducer<StepOneKey,LongWritable,StepOneKey, OutputValue> {
+    public static class ReducerClass extends Reducer<StepOneKey,LongWritable, StepOneKey, OutputValue> {
         private static long N = 0;
         private static long cW1 = 0;
 
@@ -83,8 +82,8 @@ public class StepOne {
         // <{decade, *, w2, W2}, [c(w2)]>
         // <{decade, *, *, DECADE}, [N]>
         // outputs:
-        // <{decade, w1, w2, W1W2}, [c(w1,w2), c(w1), 0, N]> for extracting c(w1w2) & c(w1) & N in step 2
-        // <{decade, w1, w2, W1W2}, [0, 0, c(w2), N]> for extracting c(w2) in step 2
+        // <{decade, w1, w2, W1W2}, {c(w1,w2), c(w1), 0, N}>
+        // <{decade, w1, w2, W2}, {0, 0, c(w2), N}>
         public void reduce(StepOneKey key, Iterable<LongWritable> counts, Context context) throws IOException,  InterruptedException {
             long totalCount = 0;
             for (LongWritable count : counts) {
@@ -115,7 +114,7 @@ public class StepOne {
     }
 
     public static class PartitionerClass extends Partitioner<StepOneKey, LongWritable> {
-        // partition by decade
+        // Partition by decade
         @Override
         public int getPartition(StepOneKey key, LongWritable value, int numPartitions) {
             return (key.getDecade().get() % 100 / 10) % numPartitions;
@@ -124,7 +123,6 @@ public class StepOne {
 
     public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 1 started!");
-        System.out.println(args.length > 0 ? args[0] : "no args");
 
         Configuration conf = new Configuration();
 
@@ -132,8 +130,8 @@ public class StepOne {
         job.setJarByClass(StepOne.class);
 
         job.setMapperClass(MapperClass.class);
-        job.setPartitionerClass(PartitionerClass.class);
         job.setCombinerClass(CombinerClass.class);
+        job.setPartitionerClass(PartitionerClass.class);
         job.setReducerClass(ReducerClass.class);
 
         job.setMapOutputKeyClass(StepOneKey.class);
