@@ -74,21 +74,21 @@ public class StepThree {
         // Partition by decade
         @Override
         public int getPartition(StepThreeKey key, DoubleWritable value, int numPartitions) {
-            return (key.getDecade().get() % 100 / 10) % numPartitions;
+            return key.getDecade().hashCode() % numPartitions;
         }
     }
 
 
     public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 3 started!");
-        if (args.length != 3) {
-            System.out.println("Usage: StepThree <minPmi> <relMinPmi>");
+        if (args.length != 5) {
+            System.out.println("Usage: StepThree <inputPath> <outputPath> <minPmi> <relMinPmi>");
             System.exit(1);
         }
 
         Configuration conf = new Configuration();
-        conf.set("minPmi", args[1]);
-        conf.set("relMinPmi", args[2]);
+        conf.set("minPmi", args[3]);
+        conf.set("relMinPmi", args[4]);
 
         Job job = Job.getInstance(conf, "Step Three");
         job.setJarByClass(StepThree.class);
@@ -105,8 +105,8 @@ public class StepThree {
 
         job.setInputFormatClass(TextInputFormat.class);
 
-        FileInputFormat.addInputPath(job, new Path("s3://collocation-extraction-bucket/outputs/step-two"));
-        FileOutputFormat.setOutputPath(job, new Path("s3://collocation-extraction-bucket/outputs/step-three"));
+        FileInputFormat.addInputPath(job, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job, new Path(args[2]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
         System.out.println("[DEBUG] STEP 3 finished!");

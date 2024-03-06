@@ -9,29 +9,39 @@ import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.elasticmapreduce.model.*;
 
-public class CollocationExtractor {
+import java.util.UUID;
+
+public class ExtractCollations {
     public static AWSCredentialsProvider credentialsProvider = new ProfileCredentialsProvider();
     public static AmazonS3 S3;
     public static AmazonEC2 ec2;
     public static AmazonElasticMapReduce emr;
-    public static int numberOfInstances = 2;
+    public static int numberOfInstances = 3;
+    public static int appId = UUID.randomUUID().hashCode();
 
     public static void main(String[]args){
-        if (args.length != 2) {
-            System.out.println("Usage: CollocationExtractor <minPmi> <relMinPmi>");
+        if (args.length != 3) {
+            System.out.println("Usage: ExtractCollations <minPmi> <relMinPmi>");
             System.exit(1);
         }
 
-        String minPmi = args[0];
-        String relMinPmi = args[1];
-        String stopWordsPath = "s3://collocation-extraction-bucket/stop-words/eng-stopwords.txt";
+        String minPmi = args[1];
+        String relMinPmi = args[2];
+
+        String stopWordsEngPath = "s3://collocation-extraction-bucket/stop-words/eng-stopwords.txt";
+        String inputEngPath = "s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-all/2gram/data";
+
+        String stopWordsHebPath = "s3://collocation-extraction-bucket/stop-words/heb-stopwords.txt";
+        String inputHebPath = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/2gram/data";
+
+        String inputTest = "s3://collocation-extraction-bucket/inputs/english_bigrams.txt";
 
         initAWS();
 
         // Step 1
         HadoopJarStepConfig StepOne = new HadoopJarStepConfig()
-                .withJar("s3://collocation-extraction-bucket/jars/StepOne.jar")
-                .withArgs(stopWordsPath)
+                .withJar("s3://collocation-extraction-bucket/jars/StepOneTest.jar") // TODO: StepOne.jar
+                .withArgs(stopWordsEngPath, inputTest, String.format("s3://collocation-extraction-bucket/outputs/%d/step-one", appId)) // TODO: inputEngPath
                 .withMainClass("StepOne");
         StepConfig StepOneConfig = new StepConfig()
                 .withName("StepOne")
@@ -41,6 +51,7 @@ public class CollocationExtractor {
         // Step 2
         HadoopJarStepConfig StepTwo = new HadoopJarStepConfig()
                 .withJar("s3://collocation-extraction-bucket/jars/StepTwo.jar")
+                .withArgs(String.format("s3://collocation-extraction-bucket/outputs/%d/step-one", appId), String.format("s3://collocation-extraction-bucket/outputs/%d/step-two", appId))
                 .withMainClass("StepTwo");
         StepConfig StepTwoConfig = new StepConfig()
                 .withName("StepTwo")
@@ -50,14 +61,14 @@ public class CollocationExtractor {
         // Step 3
         HadoopJarStepConfig StepThree = new HadoopJarStepConfig()
                 .withJar("s3://collocation-extraction-bucket/jars/StepThree.jar")
-                .withArgs(minPmi, relMinPmi)
+                .withArgs(String.format("s3://collocation-extraction-bucket/outputs/%d/step-two", appId), String.format("s3://collocation-extraction-bucket/outputs/%d/step-three", appId), minPmi, relMinPmi)
                 .withMainClass("StepThree");
         StepConfig StepThreeConfig = new StepConfig()
                 .withName("StepThree")
                 .withHadoopJarStep(StepThree)
                 .withActionOnFailure("TERMINATE_JOB_FLOW");
 
-        //Job flow
+        // Job flow
         JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
                 .withInstanceCount(numberOfInstances)
                 .withMasterInstanceType(InstanceType.M1Xlarge.toString())
@@ -99,4 +110,5 @@ public class CollocationExtractor {
         System.out.println( "list cluster");
         System.out.println( emr.listClusters());
     }
+
 }

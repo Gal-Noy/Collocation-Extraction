@@ -1,6 +1,6 @@
 package steps.step3;
 
-import kvutils.StepKey;
+import utils.StepKey;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -58,6 +58,6 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
 
         @Override
         public String toString() {
-            return w1.toString() + "\t" + w2.toString() + "\t" + decade.toString();
+            return w1.toString() + " " + w2.toString() + "\t" + decade.toString();
         }
 }

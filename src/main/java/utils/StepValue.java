@@ -1,4 +1,4 @@
-package kvutils;
+package utils;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;

@@ -1,6 +1,6 @@
 package steps.step2;
 
-import kvutils.StepKey;
+import utils.StepKey;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
@@ -18,7 +18,6 @@ public class StepTwoKey extends StepKey implements WritableComparable<StepKey>{
     @Override
     public int compareTo(StepKey o) {
         int oDecade = o.getDecade().get();
-        Text oW1 = o.getW1();
         Text oW2 = o.getW2();
         String oType = o.getType().toString();
         String mType = type.toString();

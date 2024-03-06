@@ -1,6 +1,6 @@
 package steps.step2;
 
-import kvutils.StepValue;
+import utils.StepValue;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
@@ -59,11 +59,7 @@ public class StepTwo {
                     cW2 = value.getCW2().get();
                     break;
                 case "W1W2":
-                    long cW1W2 = value.getCW1W2().get();
-                    long cW1 = value.getCW1().get();
-                    long N = value.getCDecade().get();
-                    double pmi = Math.log(cW1W2) + Math.log(N) - Math.log(cW1) - Math.log(cW2);
-                    double npmi = -pmi / Math.log((double) cW1W2 / N);
+                    double npmi = calculateNPMI(value);
 
                     // For extracting minPmi
                     context.write(key, new DoubleWritable(npmi));
@@ -79,13 +75,17 @@ public class StepTwo {
         // Partition by decade
         @Override
         public int getPartition(StepTwoKey key, StepValue value, int numPartitions) {
-            return (key.getDecade().get() % 100 / 10) % numPartitions;
+            return key.getDecade().hashCode() % numPartitions;
         }
     }
 
 
     public static void main(String[] args) throws Exception {
         System.out.println("[DEBUG] STEP 2 started!");
+        if (args.length != 3) {
+            System.err.println("Usage: StepTwo <inputPath> <outputPath>");
+            System.exit(-1);
+        }
 
         Configuration conf = new Configuration();
 
@@ -104,10 +104,21 @@ public class StepTwo {
 
         job.setInputFormatClass(TextInputFormat.class);
 
-        FileInputFormat.addInputPath(job, new Path("s3://collocation-extraction-bucket/outputs/step-one"));
-        FileOutputFormat.setOutputPath(job, new Path("s3://collocation-extraction-bucket/outputs/step-two"));
+        FileInputFormat.addInputPath(job, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job, new Path(args[2]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
         System.out.println("[DEBUG] STEP 2 finished!");
+    }
+
+    private static double calculateNPMI(StepValue value) {
+        long cW1W2 = value.getCW1W2().get();
+        long cW1 = value.getCW1().get();
+        long cW2 = value.getCW2().get();
+        long N = value.getCDecade().get();
+        double pmi = Math.log(cW1W2) + Math.log(N) - Math.log(cW1) - Math.log(cW2);
+        double d = (double) cW1W2 /N;
+        d = d == 0 ? 0.00001 : d == 1 ? 0.99999 : d;
+        return pmi / (-1 * Math.log(d));
     }
 }
