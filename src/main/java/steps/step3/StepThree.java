@@ -109,6 +109,5 @@ public class StepThree {
         FileOutputFormat.setOutputPath(job, new Path(args[2]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
-        System.out.println("[DEBUG] STEP 3 finished!");
     }
 }

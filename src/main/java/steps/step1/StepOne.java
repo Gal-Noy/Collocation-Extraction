@@ -163,7 +163,6 @@ public class StepOne {
         FileOutputFormat.setOutputPath(job, new Path(args[3]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
-        System.out.println("[DEBUG] STEP 1 finished!");
     }
 
 }

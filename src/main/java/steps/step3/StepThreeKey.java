@@ -6,6 +6,10 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 public class StepThreeKey extends StepKey implements WritableComparable<StepKey> {
 
         private final DoubleWritable npmi; // In order to sort by NPMI
@@ -27,8 +31,7 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
         @Override
         public int compareTo(StepKey o) {
             int oDecade = o.getDecade().get();
-            double mNpmi = npmi.get();
-            double oNpmi = ((StepThreeKey) o).getNpmi().get();
+            DoubleWritable oNpmi = ((StepThreeKey) o).getNpmi();
             String oType = o.getType().toString();
             String mType = type.toString();
 
@@ -44,7 +47,7 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
                 if (mType.equals("NPMI")) {
                     return 0;
                 }
-                int npmiCompare = Double.compare(mNpmi, oNpmi);
+                int npmiCompare = npmi.compareTo(oNpmi);
                 return npmiCompare == 0 ? -1 : npmiCompare;
             }
 
@@ -57,6 +60,18 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
             }
 
             return 0;
+        }
+
+        @Override
+        public void write(DataOutput dataOutput) throws IOException {
+            super.write(dataOutput);
+            npmi.write(dataOutput);
+        }
+
+        @Override
+        public void readFields(DataInput dataInput) throws IOException {
+            super.readFields(dataInput);
+            npmi.readFields(dataInput);
         }
 
         @Override
