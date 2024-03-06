@@ -54,12 +54,9 @@ public class StepOne {
 //                return;
 //            }
 
-                IntWritable decade = new IntWritable();
-                LongWritable cW1W2 = new LongWritable();
-
                 int year = Integer.parseInt(lineParts[1]);
-                decade.set(year - year % 10);
-                cW1W2.set(Long.parseLong(lineParts[2]));
+                IntWritable decade = new IntWritable(year - year % 10);
+                LongWritable cW1W2 = new LongWritable(Long.parseLong(lineParts[2]));
 
                 context.write(new StepOneKey(decade, w1, w2, new Text("W1W2")), cW1W2);
                 context.write(new StepOneKey(decade, w1, STAR, new Text("W1")), cW1W2);
@@ -76,7 +73,7 @@ public class StepOne {
             // <{decade, w1, w2, W1W2}, [c(w1,w2)]> => <{decade, w1, w2, W1W2}, [c(w1,w2)]>
             // <{decade, w1, *, W1}, [c1...cn]> => <{decade, w1, *, W1}, [c(w1)]>
             // <{decade, *, w2, W2}, [c1...cm]> => <{decade, *, w2, W2}, [c(w2)]>
-            // <{decade, *, *, DECADE}, [c1...cnm]> => <{decade, *, *, DECADE}, [N]>
+            // <{decade, *, *, N}, [c1...cnm]> => <{decade, *, *, N}, [N]>
             public void reduce(StepOneKey key, Iterable<LongWritable> counts, Context context) throws IOException, InterruptedException {
                 long totalCount = 0;
                 for (LongWritable count : counts) {
@@ -132,7 +129,6 @@ public class StepOne {
             // Partition by decade
             @Override
             public int getPartition(StepOneKey key, LongWritable value, int numPartitions) {
-//            return (key.getDecade().get() % 100 / 10) % numPartitions;
                 return key.getDecade().hashCode() % numPartitions;
             }
         }

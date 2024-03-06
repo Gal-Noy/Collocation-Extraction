@@ -16,7 +16,7 @@ public class ExtractCollations {
     public static AmazonS3 S3;
     public static AmazonEC2 ec2;
     public static AmazonElasticMapReduce emr;
-    public static int numberOfInstances = 3;
+    public static int numberOfInstances = 2;
     public static int appId = UUID.randomUUID().hashCode();
 
     public static void main(String[]args){
@@ -71,8 +71,8 @@ public class ExtractCollations {
         // Job flow
         JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
                 .withInstanceCount(numberOfInstances)
-                .withMasterInstanceType(InstanceType.M1Xlarge.toString())
-                .withSlaveInstanceType(InstanceType.M1Xlarge.toString())
+                .withMasterInstanceType(InstanceType.M4Large.toString())
+                .withSlaveInstanceType(InstanceType.M4Large.toString())
                 .withHadoopVersion("2.9.2")
                 .withEc2KeyName("vockey")
                 .withKeepJobFlowAliveWhenNoSteps(false)

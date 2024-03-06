@@ -17,16 +17,19 @@ public class StepOneKey extends StepKey implements WritableComparable<StepKey>{
 
     @Override
     public int compareTo(StepKey o) {
+        int mDecade = decade.get();
         int oDecade = o.getDecade().get();
-        Text oW1 = o.getW1();
-        Text oW2 = o.getW2();
+        String mW1 = w1.toString();
+        String oW1 = o.getW1().toString();
+        String mW2 = w2.toString();
+        String oW2 = o.getW2().toString();
         String oType = o.getType().toString();
         String mType = type.toString();
 
         // Both are decade keys or different decades => compare decades
         if (mType.equals("N") && oType.equals("N") ||
-                decade.get() != oDecade) {
-            return Integer.compare(decade.get(), oDecade);
+                mDecade != oDecade) {
+            return Integer.compare(mDecade, oDecade);
         }
 
         // Same decades:
@@ -35,13 +38,13 @@ public class StepOneKey extends StepKey implements WritableComparable<StepKey>{
         if (mType.equals(oType)) {
             switch (mType) {
                 case "W1":
-                    return w1.compareTo(oW1);
+                    return mW1.compareTo(oW1);
                 case "W2":
-                    return w2.compareTo(oW2);
-                case "W1W2":
-                    if (w1.equals(oW1))
-                        return w2.compareTo(oW2);
-                    return w1.compareTo(oW1);
+                    return mW2.compareTo(oW2);
+                default:
+                    if (mW1.equals(oW1))
+                        return mW2.compareTo(oW2);
+                    return mW1.compareTo(oW1);
             }
         }
 
@@ -58,9 +61,9 @@ public class StepOneKey extends StepKey implements WritableComparable<StepKey>{
                 case "W2":
                     return -1;
                 case "W1W2":
-                    if (w1.equals(oW1))
+                    if (mW1.equals(oW1))
                         return -1;
-                    return w1.compareTo(oW1);
+                    return mW1.compareTo(oW1);
             }
         }
         if (oType.equals("W1")) {
@@ -68,13 +71,13 @@ public class StepOneKey extends StepKey implements WritableComparable<StepKey>{
                 case "W2":
                     return 1;
                 case "W1W2":
-                    if (w1.equals(oW1))
+                    if (mW1.equals(oW1))
                         return 1;
-                    return w1.compareTo(oW1);
+                    return mW1.compareTo(oW1);
             }
         }
         if (mType.equals("W1W2"))
             return -1;
-        return 0;
+        return 1;
     }
 }

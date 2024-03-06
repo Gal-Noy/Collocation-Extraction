@@ -20,10 +20,9 @@ import java.io.IOException;
 public class StepTwo {
 
     public static class MapperClass extends Mapper<LongWritable, Text, StepTwoKey, StepValue> {
-
         @Override
         // <id, "decade w1 w2 W1W2 \t c(w1,w2) c(w1) 0 N"> => <decade, w1, w2, W1W2>, <c(w1,w2), c(w1), 0, N>
-        // <id, "decade w1 w2 W2 \t 0 0 c(w2) N"> => <decade, w1, w2, W2>, <0, 0, c(w2), N>
+        // <id, "decade * w2 W2 \t 0 0 c(w2) N"> => <decade, w1, w2, W2>, <0, 0, c(w2), N>
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String[] lineParts = value.toString().split("\t");
 

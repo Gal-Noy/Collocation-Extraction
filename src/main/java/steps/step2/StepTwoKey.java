@@ -18,7 +18,10 @@ public class StepTwoKey extends StepKey implements WritableComparable<StepKey>{
     @Override
     public int compareTo(StepKey o) {
         int oDecade = o.getDecade().get();
-        Text oW2 = o.getW2();
+
+        String mW2 = w2.toString();
+        String oW2 = o.getW2().toString();
+
         String oType = o.getType().toString();
         String mType = type.toString();
 
@@ -31,19 +34,19 @@ public class StepTwoKey extends StepKey implements WritableComparable<StepKey>{
 
         // Same type keys:
         if (mType.equals(oType)) {
-            return w2.compareTo(oW2);
+            return mW2.compareTo(oW2);
         }
 
         // Different types:
         if (mType.equals("W2")) { // oType = W1W2
-            if (w2.equals(oW2))
+            if (mW2.equals(oW2))
                 return -1;
-            return w2.compareTo(oW2);
+            return mW2.compareTo(oW2);
         }
         if (mType.equals("W1W2")) { // oType = W2
-            if (w2.equals(oW2))
+            if (mW2.equals(oW2))
                 return 1;
-            return w2.compareTo(oW2);
+            return mW2.compareTo(oW2);
         }
         return 0;
     }
