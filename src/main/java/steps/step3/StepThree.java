@@ -15,15 +15,14 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 
 public class StepThree {
     public static class MapperClass extends Mapper<LongWritable, Text, StepThreeKey, DoubleWritable> {
 
         @Override
-        // <id, "decade w1 w2 W1W2 \t npmi"> => <{decade, w1, w2, W1W2, npmi}, npmi>
-        // <id, "decade * * NPMI \t npmi"> => <{decade, 0, 0, NPMI, npmi}, npmi>
+        // <id, "decade w1 w2 W1W2 \t npmi"> => <{decade, w1, w2, W1W2, npmi}, [npmi]>
+        // <id, "decade * * NPMI \t npmi"> => <{decade, 0, 0, NPMI, npmi}, [npmis]>
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String[] lineParts = value.toString().split("\t");
 
@@ -34,6 +33,19 @@ public class StepThree {
 
             StepThreeKey newKey = new StepThreeKey(new IntWritable(Integer.parseInt(decade)), new Text(w1), new Text(w2), new Text(type), new DoubleWritable(npmi));
             context.write(newKey, new DoubleWritable(npmi));
+        }
+    }
+
+    public static class CombinerClass extends Reducer<StepThreeKey, DoubleWritable, StepThreeKey, DoubleWritable> {
+        @Override
+        // <{decade, w1, w2, W1W2, npmi}, [npmi]> => ignore
+        // <{decade, 0, 0, NPMI, npmi}, [n1...nn]> => <{decade, 0, 0, NPMI, npmi}, [npmis]>
+        public void reduce(StepThreeKey key, Iterable<DoubleWritable> counts, Context context) throws IOException, InterruptedException {
+            double totalValue = 0;
+            for (DoubleWritable count : counts) {
+                totalValue += count.get();
+            }
+            context.write(key, new DoubleWritable(totalValue));
         }
     }
 
@@ -50,9 +62,7 @@ public class StepThree {
         public void reduce(StepThreeKey key, Iterable<DoubleWritable> counts, Context context) throws IOException, InterruptedException {
             try {
                 if (key.getType().toString().equals("NPMI")) {
-                    for (DoubleWritable count : counts) {
-                        decadeNPMIs += count.get();
-                    }
+                    decadeNPMIs = counts.iterator().next().get();
                 } else { // W1W2
                     double npmi = counts.iterator().next().get();
                     double rNpmi = npmi / decadeNPMIs;
@@ -94,6 +104,7 @@ public class StepThree {
         job.setJarByClass(StepThree.class);
 
         job.setMapperClass(MapperClass.class);
+        job.setCombinerClass(CombinerClass.class);
         job.setPartitionerClass(PartitionerClass.class);
         job.setReducerClass(ReducerClass.class);
 
@@ -101,7 +112,7 @@ public class StepThree {
         job.setMapOutputValueClass(DoubleWritable.class); // npmi
 
         job.setOutputKeyClass(StepThreeKey.class);
-        job.setOutputValueClass(Text.class); // "NPMI: npmi \t relMinPMI: rNpmi"
+        job.setOutputValueClass(Text.class);
 
         job.setInputFormatClass(TextInputFormat.class);
 

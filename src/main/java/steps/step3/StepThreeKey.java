@@ -48,7 +48,7 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
                     return 0;
                 }
                 int npmiCompare = npmi.compareTo(oNpmi);
-                return npmiCompare == 0 ? -1 : npmiCompare;
+                return npmiCompare == 0 ? 1 : -npmiCompare; // In order to sort in descending order
             }
 
             // Different types:
