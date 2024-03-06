@@ -16,7 +16,7 @@ public class ExtractCollations {
     public static AmazonS3 S3;
     public static AmazonEC2 ec2;
     public static AmazonElasticMapReduce emr;
-    public static int numberOfInstances = 2;
+    public static int numberOfInstances = 3;
     public static int appId = UUID.randomUUID().hashCode();
 
     public static void main(String[]args){

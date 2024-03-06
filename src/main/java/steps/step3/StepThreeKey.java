@@ -26,9 +26,9 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
 
         @Override
         public int compareTo(StepKey o) {
-            StepThreeKey other = (StepThreeKey) o;
-            int oDecade = other.getDecade().get();
-            double oNpmi = other.getNpmi().get();
+            int oDecade = o.getDecade().get();
+            double mNpmi = npmi.get();
+            double oNpmi = ((StepThreeKey) o).getNpmi().get();
             String oType = o.getType().toString();
             String mType = type.toString();
 
@@ -41,10 +41,16 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
 
             // Same type keys:
             if (mType.equals(oType)) {
-                if (mType.equals("NPMI"))
-                    return 0;
-                int npmiCompare = Double.compare(npmi.get(), oNpmi);
-                return npmiCompare == 0 ? 1 : npmiCompare;
+                if (mType.equals("W1W2")) {
+                    if (mNpmi > oNpmi) {
+                        return -1;
+                    }
+                    if (mNpmi < oNpmi) {
+                        return 1;
+                    }
+                    return -1;
+                }
+                return 0;
             }
 
             // Different types:

@@ -45,10 +45,10 @@ public class StepOne {
                 Text w1 = new Text(bigram[0].toLowerCase());
                 Text w2 = new Text(bigram[1].toLowerCase());
 
-//            if (stopWords.containsWord(w1.toString()) || stopWords.containsWord(w2.toString())) {
-//                return;
-//            }
-//
+            if (stopWords.containsWord(w1.toString()) || stopWords.containsWord(w2.toString())) {
+                return;
+            }
+
 //            // Half corpus
 //            if (Math.random() > 0.5) {
 //                return;

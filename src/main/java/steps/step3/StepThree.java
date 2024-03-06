@@ -60,7 +60,7 @@ public class StepThree {
                     final double relMinPmi = Double.parseDouble(context.getConfiguration().get("relMinPmi"));
 
                     if (npmi >= minPmi || rNpmi >= relMinPmi) {
-                        context.write(key, new Text(String.format("NPMI: %.5f", npmi)));
+                        context.write(key, new Text(String.format("%.5f", npmi)));
                     }
                 }
             }
