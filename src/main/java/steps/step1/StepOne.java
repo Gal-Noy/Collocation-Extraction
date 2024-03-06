@@ -129,7 +129,7 @@ public class StepOne {
             // Partition by decade
             @Override
             public int getPartition(StepOneKey key, LongWritable value, int numPartitions) {
-                return key.getDecade().hashCode() % numPartitions;
+                return (key.getDecade().get() % 100 / 10) % numPartitions;
             }
         }
 

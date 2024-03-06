@@ -43,7 +43,8 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
             if (mType.equals(oType)) {
                 if (mType.equals("NPMI"))
                     return 0;
-                return Double.compare(npmi.get(), oNpmi);
+                int npmiCompare = Double.compare(npmi.get(), oNpmi);
+                return npmiCompare == 0 ? 1 : npmiCompare;
             }
 
             // Different types:
@@ -53,11 +54,12 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
             if (mType.equals("W1W2")) { // oType = NPMI
                 return 1;
             }
+
             return 0;
         }
 
         @Override
         public String toString() {
-            return w1.toString() + " " + w2.toString() + "\t" + decade.toString();
+            return decade.toString() + " " + w1.toString() + " " + w2.toString();
         }
 }

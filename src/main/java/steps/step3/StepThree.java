@@ -74,7 +74,7 @@ public class StepThree {
         // Partition by decade
         @Override
         public int getPartition(StepThreeKey key, DoubleWritable value, int numPartitions) {
-            return key.getDecade().hashCode() % numPartitions;
+            return (key.getDecade().get() % 100 / 10) % numPartitions;
         }
     }
 
