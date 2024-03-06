@@ -41,16 +41,11 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
 
             // Same type keys:
             if (mType.equals(oType)) {
-                if (mType.equals("W1W2")) {
-                    if (mNpmi > oNpmi) {
-                        return -1;
-                    }
-                    if (mNpmi < oNpmi) {
-                        return 1;
-                    }
-                    return -1;
+                if (mType.equals("NPMI")) {
+                    return 0;
                 }
-                return 0;
+                int npmiCompare = Double.compare(mNpmi, oNpmi);
+                return npmiCompare == 0 ? -1 : npmiCompare;
             }
 
             // Different types:
