@@ -76,6 +76,6 @@ public class StepThreeKey extends StepKey implements WritableComparable<StepKey>
 
         @Override
         public String toString() {
-            return decade.toString() + " " + w1.toString() + " " + w2.toString();
+            return decade.toString() + "\t" + w1.toString() + " " + w2.toString();
         }
 }

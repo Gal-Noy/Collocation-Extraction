@@ -9,6 +9,8 @@ import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.elasticmapreduce.model.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class ExtractCollations {
@@ -34,14 +36,12 @@ public class ExtractCollations {
         String stopWordsHebPath = "s3://collocation-extraction-bucket/stop-words/heb-stopwords.txt";
         String inputHebPath = "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/2gram/data";
 
-        String inputTest = "s3://collocation-extraction-bucket/inputs/english_bigrams.txt";
-
         initAWS();
 
         // Step 1
         HadoopJarStepConfig StepOne = new HadoopJarStepConfig()
-                .withJar("s3://collocation-extraction-bucket/jars/StepOneTest.jar") // TODO: StepOne.jar
-                .withArgs(stopWordsEngPath, inputTest, String.format("s3://collocation-extraction-bucket/outputs/%d/step-one", appId)) // TODO: inputEngPath
+                .withJar("s3://collocation-extraction-bucket/jars/StepOneFull.jar")
+                .withArgs(stopWordsHebPath, inputHebPath, String.format("s3://collocation-extraction-bucket/outputs/%d/step-one", appId))
                 .withMainClass("StepOne");
         StepConfig StepOneConfig = new StepConfig()
                 .withName("StepOne")
@@ -71,8 +71,8 @@ public class ExtractCollations {
         // Job flow
         JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
                 .withInstanceCount(numberOfInstances)
-                .withMasterInstanceType(InstanceType.M4Large.toString())
-                .withSlaveInstanceType(InstanceType.M4Large.toString())
+                .withMasterInstanceType(InstanceType.M4Xlarge.toString())
+                .withSlaveInstanceType(InstanceType.M4Xlarge.toString())
                 .withHadoopVersion("2.9.2")
                 .withEc2KeyName("vockey")
                 .withKeepJobFlowAliveWhenNoSteps(false)

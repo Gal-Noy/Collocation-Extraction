@@ -157,12 +157,12 @@ public class StepOne {
         job.setOutputKeyClass(StepOneKey.class);
         job.setOutputValueClass(StepValue.class);
 
-        job.setInputFormatClass(TextInputFormat.class);
+//        job.setInputFormatClass(TextInputFormat.class);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
 
         FileInputFormat.addInputPath(job, new Path(args[2]));
         FileOutputFormat.setOutputPath(job, new Path(args[3]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
-
 }
