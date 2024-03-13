@@ -24,7 +24,7 @@ To run the application, follow these steps:
    java -jar CollationExtraction.jar <minPmi> <relMinPmi>
    ```
 - `minPmi`: Minimal PMI value for collocation determination.
-- `outputFileNameI`: Relative minimal PMI value for collocation determination.
+- `relMinPmi`: Relative minimal PMI value for collocation determination.
 
 ## Details
 ### Instance Details
